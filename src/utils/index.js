@@ -4,7 +4,6 @@ import 'moment/locale/es'
 import * as d3 from 'd3'
 import _ from 'lodash'
 import loadjs from 'loadjs'
-import * as axios from 'axios'
 import empty from 'json-schema-empty'
 
 export default {
@@ -106,39 +105,6 @@ export default {
       } else {
         resolve(global.ol)
       }
-    })
-  },
-
-  loadAsync(what, whichKind) {
-    return new Promise((resolve, reject) => {
-      axios({
-        url: what,
-        method: 'get',
-        responseType: 'text'
-      }).then(response => {
-        let uid = 'la_' + Math.random().toString(36).slice(2, 12)
-
-        if (response.data) {
-          switch (whichKind) {
-            case 'js':
-              d3.select('head').append('script')
-                .attr('id', uid)
-                .html(response.data)
-              break
-            case 'css':
-              d3.select('head').append('style')
-                .attr('id', uid)
-                .html(response.data)
-              break
-            default:
-              d3.select('head').append('script')
-                .attr('id', uid)
-                .html(response.data)
-          }
-        }
-
-        resolve(uid)
-      }).catch(err => reject(err))
     })
   },
 

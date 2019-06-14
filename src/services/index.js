@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import * as d3 from 'd3'
+import * as axios from 'axios'
 import { EventEmitter } from 'events'
 
 import utils from '../utils'
@@ -46,29 +47,25 @@ export default class Services extends EventEmitter {
 
           // effective load
           // no need to check for css (to be removed in v5)
-          utils.loadAsync(cssURL, 'css').then(added => {
+          this.loadAsync(cssURL, 'css').then(added => {
             this.servicesDico[service.name].domElements =
               this.servicesDico[service.name].domElements || []
 
-            for (let a of added) {
-              this.servicesDico[service.name].domElements.push(a)
-            }
+            this.servicesDico[service.name].domElements.push(added)
           }).catch(err => {
             console.log('webpack or css not available')
           })
 
           let loadMainJS = () => {
             return new Promise((resolve, reject) => {
-              utils.loadAsync(jsURL, 'js').then(async added => {
+              this.loadAsync(jsURL, 'js').then(async added => {
                 console.log(service.name + ': async services main file loaded with id ' + added)
 
                 this.servicesDico[service.name].ready = true
                 this.servicesDico[service.name].domElements =
                   this.servicesDico[service.name].domElements || []
 
-                for (let a of added) {
-                  this.servicesDico[service.name].domElements.push(a)
-                }
+                this.servicesDico[service.name].domElements.push(added)
 
                 // tells locally (client side) that a service is up
                 utils.waitForProperty(this, '$i18n').then($i18n => {
@@ -77,7 +74,8 @@ export default class Services extends EventEmitter {
                     this.servicesDico[service.name].options.description.i18n)
                 })
 
-                global['service_' + service.name](Vue)
+                // call main service client (browser) function
+                global['iios_' + service.name](Vue)
 
                 this.emit('service:up', service)
                 resolve()
@@ -85,14 +83,12 @@ export default class Services extends EventEmitter {
             })
           }
 
-          utils.loadAsync(jsChunksURL, 'js').then(added => {
+          this.loadAsync(jsChunksURL, 'js').then(added => {
             console.log(service.name + ': async services chunk file loaded with id ' + added)
             this.servicesDico[service.name].domElements =
               this.servicesDico[service.name].domElements || []
 
-            for (let a of added) {
-              this.servicesDico[service.name].domElements.push(a)
-            }
+            this.servicesDico[service.name].domElements.push(added)
 
             loadMainJS()
           }).catch(err => {
@@ -112,9 +108,6 @@ export default class Services extends EventEmitter {
 
     // a service has been shut down
     this.socket.on('service:down', service => {
-      // send event before destroying data
-      this.emit('service:down', service.name, this.servicesDico[service.name])
-
       // if dom elements, then remove
       if (this.servicesDico[service.name].domElements) {
         for (let domElId of this.servicesDico[service.name].domElements) {
@@ -125,6 +118,9 @@ export default class Services extends EventEmitter {
       // deletes registered reference
       delete this[service.name]
       delete this.servicesDico[service.name]
+      
+      // send event before destroying data
+      this.emit('service:down', service.name, this.servicesDico[service.name])
     })
 
     // heartbeat
@@ -167,6 +163,39 @@ export default class Services extends EventEmitter {
         this.socket.emit('service:' + service + ':request', fullArgs)
       })
     }
+  }
+
+  loadAsync(what, whichKind) {
+    return new Promise((resolve, reject) => {
+      axios({
+        url: what,
+        method: 'get',
+        responseType: 'text'
+      }).then(response => {
+        let uid = 'iios_' + Math.random().toString(36).slice(2, 12)
+
+        if (response.data) {
+          switch (whichKind) {
+            case 'js':
+              d3.select('head').append('script')
+                .attr('id', uid)
+                .html(response.data)
+              break
+            case 'css':
+              d3.select('head').append('style')
+                .attr('id', uid)
+                .html(response.data)
+              break
+            default:
+              d3.select('head').append('script')
+                .attr('id', uid)
+                .html(response.data)
+          }
+        }
+
+        resolve(uid)
+      }).catch(err => reject(err))
+    })
   }
 
   waitForProperty(obj, prop, delay) {
