@@ -118,7 +118,7 @@ export default class Services extends EventEmitter {
       // deletes registered reference
       delete this[service.name]
       delete this.servicesDico[service.name]
-      
+
       // send event before destroying data
       this.emit('service:down', service.name, this.servicesDico[service.name])
     })
@@ -130,7 +130,7 @@ export default class Services extends EventEmitter {
   register(service, method) {
     this[service] = this[service] || {}
 
-    this[service][method] = args => {
+    this[service][method] = (...args) => {
       return new Promise((resolve, reject) => {
         let token = Math.random().toString(36).slice(2)
         let topic = 'service:' + service + ':' + method + ':' + token
@@ -145,7 +145,7 @@ export default class Services extends EventEmitter {
           if (data.err) {
             reject(data.err)
           } else {
-            resolve(data.result)
+            resolve(data)
           }
 
           // heartbeat
@@ -157,7 +157,7 @@ export default class Services extends EventEmitter {
           args: args,
           token: token,
           method: method,
-          userId: localStorage.token
+          jwt: localStorage.token
         }
 
         this.socket.emit('service:' + service + ':request', fullArgs)

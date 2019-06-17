@@ -60,9 +60,8 @@ export default class Modules {
   }
 
   register(service, method) {
-    // console.log('register module', service, method)
     let setMethod = serviceName => {
-      return args => {
+      return (...args) => {
         return new Promise((resolve, reject) => {
           let token = Math.random().toString(36).slice(2)
           let topic = 'module:' + serviceName + ':' + method + ':' + token
@@ -77,11 +76,8 @@ export default class Modules {
             if (data.err) {
               reject(data.err)
             } else {
-              resolve(data.result)
+              resolve(data)
             }
-
-            // heartbeat
-            this.$ws.heartbeat = true
           })
 
           // 2018/08/15: tokenized userID
@@ -90,7 +86,7 @@ export default class Modules {
             args: args,
             token: token,
             method: method,
-            userId: localStorage.token
+            jwt: localStorage.token
           }
 
           this.socket.emit('module:event', fullArgs)
@@ -115,7 +111,7 @@ export default class Modules {
     }
   }
 
-  waitForService(name, sub) {
+  waitForModule(name, sub) {
     return new Promise((resolve, reject) => {
       var checkTimeout
 
