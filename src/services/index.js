@@ -45,8 +45,6 @@ export default class Services extends EventEmitter {
           let loadMainJS = () => {
             return new Promise((resolve, reject) => {
               this.loadAsync(service.name, 'build.js', 'js').then(async added => {
-                console.log(service.name + ': async services main file loaded with id ' + added)
-
                 this.servicesDico[service.name].ready = true
                 this.servicesDico[service.name].domElements =
                   this.servicesDico[service.name].domElements || []
@@ -61,7 +59,6 @@ export default class Services extends EventEmitter {
                 })
 
                 // call main service client (browser) function
-                console.log('iios_' + service.name, global['iios_' + service.name])
                 global['iios_' + service.name](Vue)
 
                 this.emit('service:up', service)
@@ -71,16 +68,15 @@ export default class Services extends EventEmitter {
           }
 
           this.loadAsync(service.name, 'chunks.js', 'js').then(added => {
-            console.log(service.name + ': async services chunk file loaded with id ' + added)
             this.servicesDico[service.name].domElements =
               this.servicesDico[service.name].domElements || []
 
             this.servicesDico[service.name].domElements.push(added)
 
-            loadMainJS()
+            loadMainJS().catch(err => console.log(err))
           }).catch(err => {
             console.log('no chunks for service ' +  service.name)
-            loadMainJS()
+            loadMainJS().catch(err => console.log(err))
           })
         } else {
           this.servicesDico[service.name].ready = true
