@@ -227,5 +227,9 @@ export default {
       obj[level] = obj[level] || {}
       this.setByPath(obj[level], next, value)
     }
+  },
+
+  uuid() {
+    return Math.random().toString(36).slice(2)
   }
 }

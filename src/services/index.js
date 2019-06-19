@@ -10,7 +10,7 @@ export default class Services extends EventEmitter {
     super()
 
     this.socket = socket
-    this.uuid = Math.random().toString(36).slice(2)
+    this.uuid = utils.uuid()
 
     // services dico (by name)
     this.servicesDico = {}
@@ -31,34 +31,20 @@ export default class Services extends EventEmitter {
         this.servicesDico[service.name] = service
 
         if (service.options && service.options.uiComponentInjection) {
-          let all = []
-          let baseUrl = '/api/services/' + service.name + '/'
-          let imagesBaseUrl = '/api/images/' + service.name + '/'
-
-          let jsURL = baseUrl + 'build.js'
-          let jsChunksURL = baseUrl + 'chunks.js'
-          let cssURL = baseUrl + 'build.css'
-
-          this.servicesDico[service.name].baseUrl = baseUrl
-          this.servicesDico[service.name].imagesBaseUrl = baseUrl
-          this.servicesDico[service.name].options.description.icon =
-            imagesBaseUrl +
-            this.servicesDico[service.name].options.description.icon
-
           // effective load
           // no need to check for css (to be removed in v5)
-          this.loadAsync(cssURL, 'css').then(added => {
+          this.loadAsync(service.name, 'build.css', 'css').then(added => {
             this.servicesDico[service.name].domElements =
               this.servicesDico[service.name].domElements || []
 
             this.servicesDico[service.name].domElements.push(added)
           }).catch(err => {
-            console.log('webpack or css not available')
+            console.log('css not available for service ' + service.name)
           })
 
           let loadMainJS = () => {
             return new Promise((resolve, reject) => {
-              this.loadAsync(jsURL, 'js').then(async added => {
+              this.loadAsync(service.name, 'build.js', 'js').then(async added => {
                 console.log(service.name + ': async services main file loaded with id ' + added)
 
                 this.servicesDico[service.name].ready = true
@@ -75,6 +61,7 @@ export default class Services extends EventEmitter {
                 })
 
                 // call main service client (browser) function
+                console.log('iios_' + service.name, global['iios_' + service.name])
                 global['iios_' + service.name](Vue)
 
                 this.emit('service:up', service)
@@ -83,7 +70,7 @@ export default class Services extends EventEmitter {
             })
           }
 
-          this.loadAsync(jsChunksURL, 'js').then(added => {
+          this.loadAsync(service.name, 'chunks.js', 'js').then(added => {
             console.log(service.name + ': async services chunk file loaded with id ' + added)
             this.servicesDico[service.name].domElements =
               this.servicesDico[service.name].domElements || []
@@ -92,7 +79,7 @@ export default class Services extends EventEmitter {
 
             loadMainJS()
           }).catch(err => {
-            console.log('no chunks for service ' +  service.name, err, jsChunksURL)
+            console.log('no chunks for service ' +  service.name)
             loadMainJS()
           })
         } else {
@@ -147,9 +134,6 @@ export default class Services extends EventEmitter {
           } else {
             resolve(data)
           }
-
-          // heartbeat
-          this.heartbeat = true
         })
 
         // 2018/08/15: tokenized userID
@@ -165,32 +149,52 @@ export default class Services extends EventEmitter {
     }
   }
 
-  loadAsync(what, whichKind) {
+  getFileFromService(serviceName, fileName) {
     return new Promise((resolve, reject) => {
-      axios({
-        url: what,
-        method: 'get',
-        responseType: 'text'
-      }).then(response => {
+      let token = utils.uuid()
+      let topic = 'service:proxy:' + token
+
+      let timeout = setTimeout(() => {
+        this.socket.off(topic)
+        reject(new Error('timeout for ' + topic))
+      }, this.rpcTimeout * 20)
+
+      this.socket.once(topic, data => {
+        clearTimeout(timeout)
+        if (data.err) {
+          reject(data.err)
+        } else {
+          resolve(data)
+        }
+      })
+
+      this.socket.emit('service:proxy', serviceName, fileName, token)
+    })
+  }
+
+  loadAsync(serviceName, fileName, whichKind) {
+    return new Promise((resolve, reject) => {
+      this.getFileFromService(serviceName, fileName).then(data => {
+        // conversion to string
+        data = String.fromCharCode.apply(null, new Uint8Array(data))
+
         let uid = 'iios_' + Math.random().toString(36).slice(2, 12)
 
-        if (response.data) {
-          switch (whichKind) {
-            case 'js':
-              d3.select('head').append('script')
-                .attr('id', uid)
-                .html(response.data)
-              break
-            case 'css':
-              d3.select('head').append('style')
-                .attr('id', uid)
-                .html(response.data)
-              break
-            default:
-              d3.select('head').append('script')
-                .attr('id', uid)
-                .html(response.data)
-          }
+        switch (whichKind) {
+          case 'js':
+            d3.select('head').append('script')
+              .attr('id', uid)
+              .html(data)
+            break
+          case 'css':
+            d3.select('head').append('style')
+              .attr('id', uid)
+              .html(data)
+            break
+          default:
+            d3.select('head').append('script')
+              .attr('id', uid)
+              .html(data)
         }
 
         resolve(uid)
