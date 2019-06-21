@@ -91,19 +91,28 @@ export default class Services extends EventEmitter {
 
     // a service has been shut down
     this.socket.on('service:down', service => {
-      // if dom elements, then remove
-      if (this.servicesDico[service.name].domElements) {
-        for (let domElId of this.servicesDico[service.name].domElements) {
-          d3.select('#' + domElId).remove()
+      let destroyTimeout = setTimeout(onReadyToBeRemove, 3000)
+
+      let onReadyToBeRemove = () => {
+        clearTimeout(destroyTimeout)
+
+        // if dom elements, then remove
+        if (this.servicesDico[service.name].domElements) {
+          for (let domElId of this.servicesDico[service.name].domElements) {
+            d3.select('#' + domElId).remove()
+          }
         }
+
+        // deletes registered reference
+        delete this[service.name]
+        delete this.servicesDico[service.name]
+
+        // send event before destroying data
+        this.emit('service:down', service.name, this.servicesDico[service.name])
       }
 
-      // deletes registered reference
-      delete this[service.name]
-      delete this.servicesDico[service.name]
-
-      // send event before destroying data
-      this.emit('service:down', service.name, this.servicesDico[service.name])
+      this.once('service:destroy:' + service.name + ':done', onReadyToBeRemove)
+      this.emit('service:destroy:' + service.name)
     })
 
     // heartbeat
@@ -132,7 +141,7 @@ export default class Services extends EventEmitter {
           }
         })
 
-        // 2018/08/15: tokenized userID
+        // send jwt for user id retrieval
         let fullArgs = {
           args: args,
           token: token,
