@@ -86,7 +86,7 @@ export default class Modules {
             args: args,
             token: token,
             method: method,
-            jwt: localStorage.token
+            jwt: localStorage.getItem('token')
           }
 
           this.socket.emit('module:event', fullArgs)

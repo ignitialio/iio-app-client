@@ -109,7 +109,7 @@ export default {
   },
 
   token() {
-    return localStorage.token
+    return localStorage.getItem('token')
   },
 
   waitForDOMReady(selector, delay = 5000) {

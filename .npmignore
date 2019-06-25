@@ -1,1 +1,3 @@
 .git/
+.eslint*
+node_modules/
