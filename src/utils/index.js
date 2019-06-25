@@ -192,7 +192,7 @@ export default {
           clearInterval(checkInterval)
           reject(new Error('timeout: properties [ ' + notReady + ' ] are not available'))
         }
-      }, delay )
+      }, delay)
     })
   },
 
@@ -210,8 +210,9 @@ export default {
         obj = obj[arrIndex[1]][arrIndex[2]]
       } else if (obj[p] !== undefined) {
         obj = obj[p]
+      } else {
+        return null
       }
-      else return null
     }
 
     return obj
@@ -224,7 +225,7 @@ export default {
     if (next === '') {
       obj[level] = value
     } else {
-      obj[level] = obj[level] || {}
+      obj[level] = obj[level] || {}
       this.setByPath(obj[level], next, value)
     }
   },

@@ -1,5 +1,3 @@
-import utils from '../utils'
-
 export default class Modules {
   constructor(socket) {
     this.socket = socket

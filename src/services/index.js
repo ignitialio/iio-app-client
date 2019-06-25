@@ -1,6 +1,5 @@
-import Vue from 'vue'
 import * as d3 from 'd3'
-import * as axios from 'axios'
+
 import { EventEmitter } from 'events'
 
 import utils from '../utils'
@@ -19,7 +18,8 @@ export default class Services extends EventEmitter {
     this.rpcTimeout = 5000
   }
 
-  initialize() {
+  /* initialize Services passing a framework reference (for ex: Vue) */
+  initialize(framework) {
     // event service:up means a new unified service available
     this.socket.on('service:up', service => {
       if (service) {
@@ -39,7 +39,7 @@ export default class Services extends EventEmitter {
 
             this.servicesDico[service.name].domElements.push(added)
           }).catch(err => {
-            console.log('css not available for service ' + service.name)
+            console.log('css not available for service ' + service.name, '' + err)
           })
 
           let loadMainJS = () => {
@@ -59,7 +59,7 @@ export default class Services extends EventEmitter {
                 })
 
                 // call main service client (browser) function
-                global['iios_' + service.name](Vue)
+                global['iios_' + service.name](framework)
 
                 this.emit('service:up', service)
                 resolve()
@@ -75,7 +75,7 @@ export default class Services extends EventEmitter {
 
             loadMainJS().catch(err => console.log(err))
           }).catch(err => {
-            console.log('no chunks for service ' +  service.name)
+            console.log('no chunks for service ' + service.name, '' + err)
             loadMainJS().catch(err => console.log(err))
           })
         } else {
@@ -91,8 +91,6 @@ export default class Services extends EventEmitter {
 
     // a service has been shut down
     this.socket.on('service:down', service => {
-      let destroyTimeout = setTimeout(onReadyToBeRemove, 3000)
-
       let onReadyToBeRemove = () => {
         clearTimeout(destroyTimeout)
 
@@ -110,6 +108,9 @@ export default class Services extends EventEmitter {
         // send event before destroying data
         this.emit('service:down', service.name, this.servicesDico[service.name])
       }
+
+      // destroy automatically if no request for that
+      let destroyTimeout = setTimeout(onReadyToBeRemove, 3000)
 
       this.once('service:destroy:' + service.name + ':done', onReadyToBeRemove)
       this.emit('service:destroy:' + service.name)
