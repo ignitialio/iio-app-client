@@ -5,6 +5,7 @@ import * as d3 from 'd3'
 import _ from 'lodash'
 import loadjs from 'loadjs'
 import empty from 'json-schema-empty'
+import jsongen from 'generate-json-schema'
 
 export default {
   /* used for deep update in JS object given a path description */
@@ -196,8 +197,12 @@ export default {
     })
   },
 
-  generateDataFormJSONSchema(args) {
-    return empty(args.schema)
+  generateDataFormJSONSchema(schema) {
+    return empty(schema)
+  },
+
+  generateJSONSchema(title, obj) {
+    return jsongen(title, obj)
   },
 
   getByPath(obj, path) {
