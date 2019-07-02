@@ -1,11 +1,12 @@
 import * as d3 from 'd3'
 
 import { EventEmitter } from 'events'
+import Encoders from '../encoders'
 
 import utils from '../utils'
 
 export default class Services extends EventEmitter {
-  constructor(socket) {
+  constructor(socket, encoder = 'bson') {
     super()
 
     this.socket = socket
@@ -15,7 +16,18 @@ export default class Services extends EventEmitter {
     this.servicesDico = {}
 
     // timeout
-    this.rpcTimeout = 5000
+    this._rpcTimeout = 5000
+
+    // encoder
+    this._encoder = Encoders[encoder]
+  }
+
+  get rpcTimeout() {
+    return this. _rpcTimeout
+  }
+
+  set rpcTimeout(val) {
+    this._rpcTimeout = val || this._rpcTimeout
   }
 
   /* initialize Services passing a framework reference (for ex: Vue) */
@@ -23,6 +35,9 @@ export default class Services extends EventEmitter {
     // event service:up means a new unified service available
     this.socket.on('service:up', service => {
       if (service) {
+        // decode/unpack
+        service = this._encoder.unpack(service)
+
         // register each method for further call
         for (let i = 0; i < service.methods.length; i++) {
           this.register(service.name, service.methods[i])
@@ -91,6 +106,9 @@ export default class Services extends EventEmitter {
 
     // a service has been shut down
     this.socket.on('service:down', service => {
+      // decode/unpack
+      service = this._encoder.unpack(service)
+
       let onReadyToBeRemove = () => {
         clearTimeout(destroyTimeout)
 
@@ -133,11 +151,13 @@ export default class Services extends EventEmitter {
           reject(new Error('timeout for ' + topic))
         }, this.rpcTimeout)
 
-        this.socket.once(topic, data => {
+        this.socket.once(topic, response => {
           clearTimeout(timeout)
-          if (data.err) {
-            reject(data.err)
+          if (response.err) {
+            reject(response.err)
           } else {
+            // decode/unpack
+            let data = (this._encoder.unpack(response)).data
             resolve(data)
           }
         })
@@ -150,7 +170,8 @@ export default class Services extends EventEmitter {
           jwt: localStorage.getItem('token')
         }
 
-        this.socket.emit('service:' + service + ':request', fullArgs)
+        this.socket.emit('service:' + service + ':request',
+          this._encoder.pack(fullArgs))
       })
     }
   }

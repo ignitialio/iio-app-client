@@ -1,11 +1,18 @@
+import Encoders from '../encoders'
+
 export default class Modules {
-  constructor(socket) {
+  constructor(socket, encoder = 'bson') {
     this.socket = socket
     this.uuid = Math.random().toString(36).slice(2)
+
+    // encoder
+    this._encoder = Encoders[encoder]
 
     // event module:up means a new module service available
     this.socket.on('module:up', module => {
       if (module) {
+        module = this._encoder.unpack(module)
+
         console.log('module:up', module)
         // root level methods
         if (module.methods) {
@@ -69,11 +76,12 @@ export default class Modules {
             reject(new Error('timeout for ' + topic))
           }, 30000)
 
-          this.socket.once(topic, data => {
+          this.socket.once(topic, response => {
             clearTimeout(timeout)
-            if (data.err) {
-              reject(data.err)
+            if (response.err) {
+              reject(response.err)
             } else {
+              let data = (this._encoder.unpack(response)).data
               resolve(data)
             }
           })
@@ -87,7 +95,7 @@ export default class Modules {
             jwt: localStorage.getItem('token')
           }
 
-          this.socket.emit('module:event', fullArgs)
+          this.socket.emit('module:event', this._encoder.pack(fullArgs))
         })
       }
     }
