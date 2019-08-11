@@ -4,7 +4,7 @@ import 'moment/locale/es'
 import * as d3 from 'd3'
 import _ from 'lodash'
 import loadjs from 'loadjs'
-import empty from 'json-schema-empty'
+import jsf from 'json-schema-faker'
 import jsongen from 'generate-json-schema'
 
 export default {
@@ -198,7 +198,25 @@ export default {
   },
 
   generateDataFormJSONSchema(schema) {
-    return empty(schema)
+    jsf.option({
+      failOnInvalidTypes: false
+    })
+
+    function addRequiredFlag(schema) {
+      if (schema.properties) {
+        schema.required = Object.keys(schema.properties)
+
+        for (let prop in schema.properties) {
+          schema.properties[prop] = addRequiredFlag(schema.properties[prop])
+        }
+      }
+
+      return schema
+    }
+
+    schema = addRequiredFlag(schema)
+    
+    return jsf.generate(schema)
   },
 
   generateJSONSchema(title, obj) {
@@ -223,6 +241,7 @@ export default {
     return obj
   },
 
+  /* simplified set of an object property based on a given path (no arrays) */
   setByPath(obj, path, value) {
     path = path.split('.')
     let level = path[0]

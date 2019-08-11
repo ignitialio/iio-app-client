@@ -1,6 +1,6 @@
 {
   "name": "@ignitial/iio-app-client",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "Ignitial.io web application client library",
   "author": "Victor Andritoiu <devandrito@gmail.com>",
   "repository": "git@github.com:ignitialio/iio-app-client.git",
@@ -12,7 +12,7 @@
     "babel-polyfill": "^6.26.0",
     "bson": "^4.0.2",
     "generate-json-schema": "^1.0.0",
-    "json-schema-empty": "^1.1.1",
+    "json-schema-faker": "^0.5.0-rc17",
     "loadjs": "^3.6.1",
     "lodash": "^4.17.14",
     "moment": "^2.24.0",

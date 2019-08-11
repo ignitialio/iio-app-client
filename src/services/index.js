@@ -99,9 +99,6 @@ export default class Services extends EventEmitter {
           this.emit('service:up', service)
         }
       }
-
-      // heartbeat
-      this.heartbeat = true
     })
 
     // a service has been shut down
@@ -133,9 +130,6 @@ export default class Services extends EventEmitter {
       this.once('service:destroy:' + service.name + ':done', onReadyToBeRemove)
       this.emit('service:destroy:' + service.name)
     })
-
-    // heartbeat
-    this.heartbeat = true
   }
 
   register(service, method) {
