@@ -12,6 +12,27 @@ export default class I18n extends EventEmitter {
     this._currentTranslation = null
   }
 
+  get lang() {
+    return this._language
+  }
+
+  set lang(l) {
+    let index = this._languages.indexOf(l)
+    this._currentTranslation = {}
+    for (let t in this._translations) {
+      if (index < 0) {
+        this._currentTranslation[t] = t
+      } else {
+        this._currentTranslation[t] = this._translations[t][index]
+      }
+    }
+
+    this._language = l
+
+    this.emit('language', this._language)
+    // console.log('lang set to ', lang)
+  }
+
   initialize(config) {
     if (config) {
       this.addTranslations(config.i18n.data)

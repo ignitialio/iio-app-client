@@ -1,6 +1,6 @@
 {
   "name": "@ignitial/iio-app-client",
-  "version": "5.1.2",
+  "version": "5.1.3",
   "description": "Ignitial.io web application client library",
   "author": "Victor Andritoiu <devandrito@gmail.com>",
   "repository": "git@github.com:ignitialio/iio-app-client.git",

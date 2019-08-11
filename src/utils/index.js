@@ -199,15 +199,45 @@ export default {
 
   generateDataFormJSONSchema(schema) {
     jsf.option({
-      failOnInvalidTypes: false
+      failOnInvalidTypes: false,
+      useDefaultValue: true,
+      useExamplesValue: true,
+      requiredOnly: false,
+      fillProperties: true
     })
 
     function addRequiredFlag(schema) {
+      schema._meta = schema._meta || { type: null }
+
       if (schema.properties) {
         schema.required = Object.keys(schema.properties)
 
         for (let prop in schema.properties) {
           schema.properties[prop] = addRequiredFlag(schema.properties[prop])
+        }
+      } else {
+        if (schema.type === 'array') {
+          if (schema.items.properties) {
+            schema.items.required = Object.keys(schema.items.properties)
+            schema.items._meta = schema.items._meta || { type: null }
+
+            if (schema.items.type === 'object') {
+              for (let prop in schema.items.properties) {
+                schema.items.properties[prop] = addRequiredFlag(schema.items.properties[prop])
+              }
+            }
+          } else if (Array.isArray(schema.items)) {
+            for (let item of schema.items) {
+              if (item.type === 'object') {
+                for (let prop in item.properties) {
+                  item.required = Object.keys(item.properties)
+                  item._meta = item._meta || { type: null }
+
+                  item.properties[prop] = addRequiredFlag(item.properties[prop])
+                }
+              }
+            }
+          }
         }
       }
 
@@ -215,8 +245,12 @@ export default {
     }
 
     schema = addRequiredFlag(schema)
-    
-    return jsf.generate(schema)
+    let obj = jsf.generate(schema)
+
+    return {
+      json: obj,
+      schema: schema
+    }
   },
 
   generateJSONSchema(title, obj) {
