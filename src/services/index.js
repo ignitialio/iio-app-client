@@ -90,7 +90,7 @@ export default class Services extends EventEmitter {
 
             loadMainJS().catch(err => console.log(err))
           }).catch(err => {
-            console.log('no chunks for service ' + service.name, '' + err)
+            console.log('no chunks for service [' + service.name + ']: ' + err)
             loadMainJS().catch(err => console.log(err))
           })
         } else {
