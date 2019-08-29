@@ -74,18 +74,15 @@ export default {
     }
   },
 
-  fromNow(date) {
-    let lang = this.$i18n._language.split('-')[0]
+  fromNow(date, lang = 'us') {
     return date ? moment(date).locale(lang).fromNow() : ''
   },
 
-  prettyDate(date) {
-    let lang = this.$i18n._language.split('-')[0]
+  prettyDate(date, lang = 'us') {
     return date ? moment(date).locale(lang).format('DD MMMM YYYY') : ''
   },
 
-  prettyDateAndTime(date) {
-    let lang = this.$i18n._language.split('-')[0]
+  prettyDateAndTime(date, lang = 'us') {
     return date ? moment(date).locale(lang).format('DD MMMM YYYY  hh:mm') : ''
   },
 
