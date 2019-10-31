@@ -132,10 +132,10 @@ export default {
   fileUrl(path, defaultPath) {
     if (!path) {
       return defaultPath
-    } else if (!path.match(/api\/uploads\//)) {
+    } else if (!path.match(/api\/s3\//)) {
       return path
     } else {
-      return path + '&token=' + this.$utils.token()
+      return path + '?token=' + localStorage.getItem('token')
     }
   },
 
