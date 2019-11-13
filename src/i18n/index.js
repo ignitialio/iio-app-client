@@ -1,4 +1,5 @@
-import _ from 'lodash'
+import cloneDeep from 'lodash/cloneDeep'
+import merge from 'lodash/merge'
 import { EventEmitter } from 'events'
 
 export default class I18n extends EventEmitter {
@@ -36,7 +37,7 @@ export default class I18n extends EventEmitter {
   initialize(config) {
     if (config) {
       this.addTranslations(config.i18n.data)
-      this._translationsInit = _.cloneDeep(this._translations)
+      this._translationsInit = cloneDeep(this._translations)
       this._languages = config.i18n.languages
       this.setLanguage(this._language)
     } else {
@@ -61,7 +62,7 @@ export default class I18n extends EventEmitter {
 
   addTranslations(data) {
     // console.log('before', this._translations, data)
-    _.merge(this._translations, data)
+    merge(this._translations, data)
     // console.log('after', this._translations)
     this.setLanguage(this._language)
   }

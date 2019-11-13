@@ -2,7 +2,7 @@ import moment from 'moment'
 import 'moment/locale/fr'
 import 'moment/locale/es'
 import * as d3 from 'd3'
-import _ from 'lodash'
+import map from 'lodash/map'
 import loadjs from 'loadjs'
 import jsf from 'json-schema-faker'
 import jsongen from 'generate-json-schema'
@@ -41,7 +41,7 @@ export default {
         }
       } else {
         let matches = path.match(/\[\d\]/g)
-        let idxs = _.map(matches, function(e) {
+        let idxs = map(matches, function(e) {
           return parseInt(e.replace('[', '').replace(']', ''))
         })
 

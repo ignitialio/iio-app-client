@@ -1,4 +1,4 @@
-import * as d3 from 'd3'
+import { select } from 'd3-selection'
 
 import { EventEmitter } from 'events'
 import Encoders from '../encoders'
@@ -112,7 +112,7 @@ export default class Services extends EventEmitter {
         // if dom elements, then remove
         if (this.servicesDico[service.name].domElements) {
           for (let domElId of this.servicesDico[service.name].domElements) {
-            d3.select('#' + domElId).remove()
+            select('#' + domElId).remove()
           }
         }
 
@@ -203,17 +203,17 @@ export default class Services extends EventEmitter {
 
         switch (whichKind) {
           case 'js':
-            d3.select('head').append('script')
+            select('head').append('script')
               .attr('id', uid)
               .html(data)
             break
           case 'css':
-            d3.select('head').append('style')
+            select('head').append('style')
               .attr('id', uid)
               .html(data)
             break
           default:
-            d3.select('head').append('script')
+            select('head').append('script')
               .attr('id', uid)
               .html(data)
         }
