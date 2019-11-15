@@ -57,6 +57,15 @@ export default class Services extends EventEmitter {
             console.log('css not available for service ' + service.name, '' + err)
           })
 
+          this.loadAsync(service.name, 'chunk-vendors.css', 'css').then(added => {
+            this.servicesDico[service.name].domElements =
+              this.servicesDico[service.name].domElements || []
+
+            this.servicesDico[service.name].domElements.push(added)
+          }).catch(err => {
+            console.log('vendors css not available for service ' + service.name, '' + err)
+          })
+
           let loadMainJS = () => {
             return new Promise((resolve, reject) => {
               this.loadAsync(service.name, 'build.js', 'js').then(async added => {
