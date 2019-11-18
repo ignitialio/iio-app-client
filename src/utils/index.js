@@ -156,9 +156,7 @@ export default {
       let service = m[1]
       let partial = m[2]
       this.getImage(service, partial).then(url => {
-        console.log(el)
         el.setAttribute('src', url)
-        console.log(service, partial, url)
       }).catch(err => console.log(err))
       return null
     } else if (path.match(/api\/s3\//)) {
