@@ -128,14 +128,43 @@ export default {
     })
   },
 
+  /* get image from service */
+  getImage(serviceName, fileName) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        let imageData = await this.$services.getFileFromService(serviceName, fileName)
+        let typedArray = new Uint8Array(imageData)
+        let type = fileName.toLowerCase().match(/\.[0-9a-z]+$/i)[0].replace('.', '')
+        if (type === 'svg') type += '+xml'
+        if (type) {
+          resolve('data:image/' + type + ';base64, ' +
+            btoa(String.fromCharCode.apply(null, typedArray)))
+        }
+      } catch (err) {
+        reject(err)
+      }
+    })
+  },
+
   /* get file url selecting between S3 and other endpoints */
-  fileUrl(path, defaultPath) {
+  fileUrl(path, defaultPath, el) {
     if (!path) {
       return defaultPath
-    } else if (!path.match(/api\/s3\//)) {
-      return path
-    } else {
+    } else if (path.match(/\$\$service/)) {
+      if (!el) return
+      let m = path.match(/\$\$service\((.*?)\)\/(.*)/)
+      let service = m[1]
+      let partial = m[2]
+      this.getImage(service, partial).then(url => {
+        console.log(el)
+        el.setAttribute('src', url)
+        console.log(service, partial, url)
+      }).catch(err => console.log(err))
+      return null
+    } else if (path.match(/api\/s3\//)) {
       return path + '?token=' + localStorage.getItem('token')
+    } else {
+      return path
     }
   },
 

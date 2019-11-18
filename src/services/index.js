@@ -20,6 +20,10 @@ export default class Services extends EventEmitter {
 
     // encoder
     this._encoder = Encoders[encoder]
+
+    // inject services into utils
+    // -> used, for example, when finding url for services
+    utils.$services = this
   }
 
   get rpcTimeout() {
