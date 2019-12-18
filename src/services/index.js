@@ -210,7 +210,8 @@ export default class Services extends EventEmitter {
     return new Promise((resolve, reject) => {
       this.getFileFromService(serviceName, fileName).then(data => {
         // conversion to string
-        data = String.fromCharCode.apply(null, new Uint8Array(data))
+        data = new Uint8Array(data)
+        data = new TextDecoder("utf-8").decode(data)
 
         let uid = 'iios_' + Math.random().toString(36).slice(2, 12)
 
