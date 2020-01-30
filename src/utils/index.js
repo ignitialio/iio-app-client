@@ -1,25 +1,8 @@
-import moment from 'moment'
-import 'moment/locale/fr'
-import 'moment/locale/es'
-import * as d3 from 'd3'
-import map from 'lodash/map'
 import loadjs from 'loadjs'
 import jsf from 'json-schema-faker'
 import jsongen from 'generate-json-schema'
 
 export default {
-  fromNow(date, lang = 'us') {
-    return date ? moment(date).locale(lang).fromNow() : ''
-  },
-
-  prettyDate(date, lang = 'us') {
-    return date ? moment(date).locale(lang).format('DD MMMM YYYY') : ''
-  },
-
-  prettyDateAndTime(date, lang = 'us') {
-    return date ? moment(date).locale(lang).format('DD MMMM YYYY  hh:mm') : ''
-  },
-
   loadOpenLayers(version = '4.6.5') {
     return new Promise((resolve, reject) => {
       if (!loadjs.isDefined('openlayers')) {
@@ -47,8 +30,8 @@ export default {
   waitForDOMReady(selector, delay = 5000) {
     return new Promise((resolve, reject) => {
       let checkInterval = setInterval(() => {
-        let el = d3.select(selector)
-        if (!el.empty()) {
+        let el = document.querySelector(selector)
+        if (el) {
           clearInterval(checkInterval)
           clearTimeout(timeout)
           resolve(el)
